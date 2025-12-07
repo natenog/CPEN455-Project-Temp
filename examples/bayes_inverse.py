@@ -196,6 +196,7 @@ if __name__ == "__main__":
 
     # Load model
     model = LlamaModel(config)
+    model.dropout = torch.nn.Dropout(p=0.1)
     load_model_weights(model, checkpoint, cache_dir=model_cache_dir, device=device)
     model = model.to(device)
 
