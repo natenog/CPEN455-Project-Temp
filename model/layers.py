@@ -99,6 +99,10 @@ class LlamaDecoderLayer(nn.Module):
         self.input_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = LlamaRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
+        self.prefix_len = getattr(config, "prefix_len", 0)
+        if self.prefix_len > 0:
+            self.prefix_embeddings = nn.Parameter(torch.randn(self.prefix_len, self.hidden_size))
+
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -130,6 +134,19 @@ class LlamaDecoderLayer(nn.Module):
         Returns:
             Output tensor [batch, seq_len, hidden_size]
         """
+        if self.prefix_len > 0:
+            B = hidden_states.size(0)
+
+            prefix = self.prefix_embeddings.unsqueeze(0).expand(B, -1, -1)
+            hidden_states = torch.cat([prefix, hidden_states], dim=1)
+
+        if attention_mask is not None:
+            old_mask = attention_mask
+            prefix_mask_size = (old_mask.size(0), 1, self.prefix_len, old_mask.size(3))
+            prefix_mask = torch.zeros(prefix_mask_size, device=old_mask.device, dtype=old_mask.dtype)
+
+            attention_mask = torch.cat([prefix_mask, old_mask], dim=2)
+
         # Save input for residual connection
         residual = hidden_states
         
