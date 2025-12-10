@@ -44,7 +44,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     load_dotenv()
-    
+
     checkpoint = os.getenv("MODEL_CHECKPOINT")
     model_cache_dir = os.getenv("MODEL_CACHE_DIR")
     
@@ -59,6 +59,12 @@ if __name__ == "__main__":
 
     # Load model
     model = LlamaModel(config)
+
+    ckpt_filepath = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'ckpts/model.ckpt')
+    state = torch.load(ckpt_filepath, map_location=device)
+    model.load_state_dict(state, strict=True)
+    print("Loading state dict from:", ckpt_filepath)
+
     load_model_weights(model, checkpoint, cache_dir=model_cache_dir, device=device)
     model = model.to(device)
     

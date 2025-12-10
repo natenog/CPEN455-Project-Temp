@@ -280,3 +280,5 @@ if __name__ == "__main__":
         )
     save_probs(args, model, tokenizer, train_n_val_dataloader, device=device, name = "train_n_val")
     save_probs(args, model, tokenizer, test_dataloader, device=device, name = "test")
+
+    torch.save(model.state_dict(), "examples/ckpts/model.ckpt")
